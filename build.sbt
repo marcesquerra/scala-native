@@ -7,6 +7,7 @@ val sbt10Version          = "1.1.6"
 val sbt10ScalaVersion     = "2.12.10"
 val libScalaVersion       = "2.11.12"
 val libCrossScalaVersions = Seq("2.11.8", "2.11.11", libScalaVersion)
+val dottyVersion          = "0.23.0-RC1"
 
 // Convert "SomeName" to "some-name".
 def convertCamelKebab(name: String): String = {
@@ -305,6 +306,25 @@ lazy val nscplugin =
       libraryDependencies ++= Seq(
         "org.scala-lang" % "scala-compiler" % scalaVersion.value,
         "org.scala-lang" % "scala-reflect"  % scalaVersion.value
+      )
+    )
+
+lazy val nscpluginDotty =
+  project
+    .in(file("nscplugin-dotty"))
+    .settings(baseSettings)
+    .settings(mavenPublishSettings)
+    .settings(
+      scalaVersion := dottyVersion,
+      crossScalaVersions := List(dottyVersion),
+      crossVersion := CrossVersion.full,
+      Compile / unmanagedSourceDirectories ++= Seq(
+        file("dotty") / "nir" / "src" / "main" / "scala",
+        file("dotty") / "util" / "src" / "main" / "scala"
+      ),
+      libraryDependencies ++= Seq(
+        "ch.epfl.lamp" %% "dotty-compiler" % scalaVersion.value,
+        "org.scala-lang.modules" % "scala-parallel-collections_2.13" % "0.2.0"
       )
     )
 
