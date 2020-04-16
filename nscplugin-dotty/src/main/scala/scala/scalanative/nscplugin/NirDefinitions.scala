@@ -1,54 +1,58 @@
-// package scala.scalanative
-// package nscplugin
+package scala.scalanative
+package nscplugin
 
 // import scala.tools.nsc._
+import dotty.tools.dotc.core.Contexts._
 
-// trait NirDefinitions { self: NirGlobalAddons =>
+trait NirDefinitions { // self: NirGlobalAddons  =>
+
 //   import global._
 //   import definitions._
 //   import rootMirror._
 
-//   object nirDefinitions {
+  implicit val ctx: Context
 
-//     // Native library
+  object nirDefinitions {
 
-//     lazy val UByteClass  = getRequiredClass("scala.scalanative.unsigned.UByte")
-//     lazy val UShortClass = getRequiredClass("scala.scalanative.unsigned.UShort")
-//     lazy val UIntClass   = getRequiredClass("scala.scalanative.unsigned.UInt")
-//     lazy val ULongClass  = getRequiredClass("scala.scalanative.unsigned.ULong")
-//     lazy val PtrClass    = getRequiredClass("scala.scalanative.unsafe.Ptr")
-//     lazy val RawPtrClass = getRequiredClass("scala.scalanative.runtime.RawPtr")
+    // Native library
 
-//     lazy val NameClass   = getRequiredClass("scala.scalanative.unsafe.name")
-//     lazy val LinkClass   = getRequiredClass("scala.scalanative.unsafe.link")
-//     lazy val ExternClass = getRequiredClass("scala.scalanative.unsafe.extern")
-//     lazy val PinClass    = getRequiredClass("scala.scalanative.unsafe.pin")
-//     lazy val StubClass   = getRequiredClass("scala.scalanative.annotation.stub")
+    lazy val UByteClass  = getRequiredClass("scala.scalanative.unsigned.UByte")
+    lazy val UShortClass = getRequiredClass("scala.scalanative.unsigned.UShort")
+    lazy val UIntClass   = getRequiredClass("scala.scalanative.unsigned.UInt")
+    lazy val ULongClass  = getRequiredClass("scala.scalanative.unsigned.ULong")
+    lazy val PtrClass    = getRequiredClass("scala.scalanative.unsafe.Ptr")
+    lazy val RawPtrClass = getRequiredClass("scala.scalanative.runtime.RawPtr")
 
-//     lazy val AlwaysInlineClass = getRequiredClass(
-//       "scala.scalanative.annotation.alwaysinline")
-//     lazy val NoOptimizeClass = getRequiredClass(
-//       "scala.scalanative.annotation.nooptimize")
-//     lazy val NoSpecializeClass = getRequiredClass(
-//       "scala.scalanative.annotation.nospecialize")
+    lazy val NameClass   = getRequiredClass("scala.scalanative.unsafe.name")
+    lazy val LinkClass   = getRequiredClass("scala.scalanative.unsafe.link")
+    lazy val ExternClass = getRequiredClass("scala.scalanative.unsafe.extern")
+    lazy val PinClass    = getRequiredClass("scala.scalanative.unsafe.pin")
+    lazy val StubClass   = getRequiredClass("scala.scalanative.annotation.stub")
 
-//     lazy val NativeModule = getRequiredModule(
-//       "scala.scalanative.unsafe.package")
-//     lazy val ExternMethod = getMember(NativeModule, TermName("extern"))
+    lazy val AlwaysInlineClass = getRequiredClass(
+      "scala.scalanative.annotation.alwaysinline")
+    lazy val NoOptimizeClass = getRequiredClass(
+      "scala.scalanative.annotation.nooptimize")
+    lazy val NoSpecializeClass = getRequiredClass(
+      "scala.scalanative.annotation.nospecialize")
 
-//     lazy val CQuoteClass = getRequiredClass(
-//       "scala.scalanative.unsafe.package$CQuote")
-//     lazy val CQuoteMethod = getDecl(CQuoteClass, TermName("c"))
+    lazy val NativeModule = getRequiredModule(
+      "scala.scalanative.unsafe.package")
+    // lazy val ExternMethod = getMember(NativeModule, TermName("extern"))
 
-//     lazy val CCastClass = getRequiredClass(
-//       "scala.scalanative.unsafe.package$CCast")
-//     lazy val CCastMethod = getDecl(CCastClass, TermName("cast"))
+    // lazy val CQuoteClass = getRequiredClass(
+    //   "scala.scalanative.unsafe.package$CQuote")
+    // lazy val CQuoteMethod = getDecl(CQuoteClass, TermName("c"))
 
-//     lazy val CFuncPtrClass = (0 to 22).map { n =>
-//       getRequiredClass("scala.scalanative.unsafe.CFuncPtr" + n)
-//     }
-//     lazy val CFuncRawPtrClass =
-//       getRequiredClass("scala.scalanative.runtime.CFuncRawPtr")
+    // lazy val CCastClass = getRequiredClass(
+    //   "scala.scalanative.unsafe.package$CCast")
+    // lazy val CCastMethod = getDecl(CCastClass, TermName("cast"))
+
+    // lazy val CFuncPtrClass = (0 to 22).map { n =>
+    //   getRequiredClass("scala.scalanative.unsafe.CFuncPtr" + n)
+    // }
+    // lazy val CFuncRawPtrClass =
+    //   getRequiredClass("scala.scalanative.runtime.CFuncRawPtr")
 
 //     lazy val TagModule     = getRequiredModule("scala.scalanative.unsafe.Tag")
 //     lazy val UnitTagMethod = getDecl(TagModule, TermName("materializeUnitTag"))
@@ -327,5 +331,5 @@
 //     lazy val AnyRefClassTag  = getDecl(ClassTagModule, TermName("AnyRef"))
 //     lazy val NothingClassTag = getDecl(ClassTagModule, TermName("Nothing"))
 //     lazy val NullClassTag    = getDecl(ClassTagModule, TermName("Null"))
-//   }
-// }
+  }
+}

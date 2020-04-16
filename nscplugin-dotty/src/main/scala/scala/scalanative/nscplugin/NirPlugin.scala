@@ -6,7 +6,8 @@ package nscplugin
 import dotty.tools.dotc.plugins.StandardPlugin
 import dotty.tools.dotc.plugins.PluginPhase
 
-class NirPlugin extends StandardPlugin with NirGenPhase { self =>
+class NirPlugin extends StandardPlugin with NirGenPhase with PrepNativeInterop {
+  self =>
   val name        = "nir"
   val description = "Compile to Scala Native IR (NIR)"
 //   val components  = List[PluginComponent](prepNativeInterop, nirGen)

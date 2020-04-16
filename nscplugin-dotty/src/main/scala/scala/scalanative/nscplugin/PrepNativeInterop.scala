@@ -1,86 +1,101 @@
-// package scala.scalanative
-// package nscplugin
+package scala.scalanative
+package nscplugin
 
 // import scala.tools.nsc
 // import nsc._
+import dotty.tools.dotc.plugins.PluginPhase
 
-// import scala.collection.immutable.ListMap
-// import scala.collection.mutable.Buffer
+import scala.collection.immutable.ListMap
+import scala.collection.mutable.Buffer
 
-// /**
-//  * This phase does:
-//  * - Rewrite calls to scala.Enumeration.Value (include name string) (Ported from ScalaJS)
-//  * - Rewrite the body `scala.util.PropertiesTrait.scalaProps` to
-//  *   be statically determined at compile-time.
-//  */
-// abstract class PrepNativeInterop
-//     extends plugins.PluginComponent
-//     with transform.Transform {
-//   import PrepNativeInterop._
+/**
+ * This phase does:
+ * - Rewrite calls to scala.Enumeration.Value (include name string) (Ported from ScalaJS)
+ * - Rewrite the body `scala.util.PropertiesTrait.scalaProps` to
+ *   be statically determined at compile-time.
+ */
+trait PrepNativeInterop {
 
-//   val nirAddons: NirGlobalAddons {
-//     val global: PrepNativeInterop.this.global.type
-//   }
+  import PrepNativeInterop._
 
-//   import global._
-//   import nirAddons.nirDefinitions._
-//   import definitions._
-//   import rootMirror._
+//  val nirAddons: NirGlobalAddons {
+//    val global: PrepNativeInterop.this.global.type
+//  }
 
-//   val phaseName: String            = "nativeinterop"
-//   override def description: String = "prepare ASTs for Native interop"
+//  import global._
+//  import nirAddons.nirDefinitions._
+//  import definitions._
+//  import rootMirror._
 
-//   override def newPhase(p: nsc.Phase): StdPhase = new NativeInteropPhase(p)
+  class NativeInteropPhase extends PluginPhase {
+    override def phaseName: String   = "nativeinterop"
+    override def description: String = "prepare ASTs for Native interop"
 
-//   class NativeInteropPhase(prev: nsc.Phase) extends Phase(prev) {
-//     override def name: String        = phaseName
-//     override def description: String = PrepNativeInterop.this.description
-//   }
+    /** Kind of the directly enclosing (most nested) owner. */
+    private var enclosingOwner: OwnerKind = OwnerKind.None
+
+    /** Cumulative kinds of all enclosing owners. */
+    private var allEnclosingOwners: OwnerKind = OwnerKind.None
+
+    /** Nicer syntax for `allEnclosingOwners is kind`. */
+    private def anyEnclosingOwner: OwnerKind = allEnclosingOwners
+
+    /** Nicer syntax for `allEnclosingOwners isnt kind`. */
+    private object noEnclosingOwner {
+      @inline def is(kind: OwnerKind): Boolean =
+        allEnclosingOwners isnt kind
+    }
+
+    private def enterOwner[A](kind: OwnerKind)(body: => A): A = {
+      require(kind.isBaseKind, kind)
+      val oldEnclosingOwner     = enclosingOwner
+      val oldAllEnclosingOwners = allEnclosingOwners
+      enclosingOwner = kind
+      allEnclosingOwners |= kind
+      try {
+        body
+      } finally {
+        enclosingOwner = oldEnclosingOwner
+        allEnclosingOwners = oldAllEnclosingOwners
+      }
+    }
+
+    // private def isScalaEnum(implDef: ImplDef) =
+    //   implDef.symbol.tpe.typeSymbol isSubClass EnumerationClass
+
+//   private trait ScalaEnumFctExtractors {
+//     protected val methSym: Symbol
+
+//     protected def resolve(ptpes: Symbol*) = {
+//       val res = methSym suchThat {
+//         _.tpe.params.map(_.tpe.typeSymbol) == ptpes.toList
+//       }
+//       assert(res != NoSymbol)
+//       res
+//     }
+
+//     protected val noArg    = resolve()
+//     protected val nameArg  = resolve(StringClass)
+//     protected val intArg   = resolve(IntClass)
+//     protected val fullMeth = resolve(IntClass, StringClass)
+
+  }
 
 //   override protected def newTransformer(unit: CompilationUnit): Transformer =
 //     new NativeInteropTransformer(unit)
 
-//   private object nativenme {
-//     val hasNext      = newTermName("hasNext")
-//     val next         = newTermName("next")
-//     val nextName     = newTermName("nextName")
-//     val x            = newTermName("x")
-//     val Value        = newTermName("Value")
-//     val Val          = newTermName("Val")
-//     val scalaProps   = newTermName("scalaProps")
-//     val propFilename = newTermName("propFilename")
-//   }
+  private object nativenme {
+    val hasNext      = newTermName("hasNext")
+    val next         = newTermName("next")
+    val nextName     = newTermName("nextName")
+    val x            = newTermName("x")
+    val Value        = newTermName("Value")
+    val Val          = newTermName("Val")
+    val scalaProps   = newTermName("scalaProps")
+    val propFilename = newTermName("propFilename")
+  }
 
 //   class NativeInteropTransformer(unit: CompilationUnit) extends Transformer {
-
-//     /** Kind of the directly enclosing (most nested) owner. */
-//     private var enclosingOwner: OwnerKind = OwnerKind.None
-
-//     /** Cumulative kinds of all enclosing owners. */
-//     private var allEnclosingOwners: OwnerKind = OwnerKind.None
-
-//     /** Nicer syntax for `allEnclosingOwners is kind`. */
-//     private def anyEnclosingOwner: OwnerKind = allEnclosingOwners
-
-//     /** Nicer syntax for `allEnclosingOwners isnt kind`. */
-//     private object noEnclosingOwner {
-//       @inline def is(kind: OwnerKind): Boolean =
-//         allEnclosingOwners isnt kind
-//     }
-
-//     private def enterOwner[A](kind: OwnerKind)(body: => A): A = {
-//       require(kind.isBaseKind, kind)
-//       val oldEnclosingOwner     = enclosingOwner
-//       val oldAllEnclosingOwners = allEnclosingOwners
-//       enclosingOwner = kind
-//       allEnclosingOwners |= kind
-//       try {
-//         body
-//       } finally {
-//         enclosingOwner = oldEnclosingOwner
-//         allEnclosingOwners = oldAllEnclosingOwners
-//       }
-//     }
 
 //     override def transform(tree: Tree): Tree =
 //       tree match {
@@ -164,26 +179,6 @@
 //         case _ => super.transform(tree)
 //       }
 //   }
-
-//   private def isScalaEnum(implDef: ImplDef) =
-//     implDef.symbol.tpe.typeSymbol isSubClass EnumerationClass
-
-//   private trait ScalaEnumFctExtractors {
-//     protected val methSym: Symbol
-
-//     protected def resolve(ptpes: Symbol*) = {
-//       val res = methSym suchThat {
-//         _.tpe.params.map(_.tpe.typeSymbol) == ptpes.toList
-//       }
-//       assert(res != NoSymbol)
-//       res
-//     }
-
-//     protected val noArg    = resolve()
-//     protected val nameArg  = resolve(StringClass)
-//     protected val intArg   = resolve(IntClass)
-//     protected val fullMeth = resolve(IntClass, StringClass)
-
 //     /**
 //      * Extractor object for calls to the targeted symbol that do not have an
 //      * explicit name in the parameters
@@ -303,60 +298,60 @@
 //     typer.atOwner(original.symbol).typed(nrhs)
 //   }
 
-// }
+}
 
-// object PrepNativeInterop {
-//   private final class OwnerKind(val baseKinds: Int) extends AnyVal {
-//     import OwnerKind._
+object PrepNativeInterop {
+  private final class OwnerKind(val baseKinds: Int) extends AnyVal {
+    import OwnerKind._
 
-//     @inline def isBaseKind: Boolean =
-//       Integer.lowestOneBit(baseKinds) == baseKinds && baseKinds != 0 // exactly 1 bit on
+    @inline def isBaseKind: Boolean =
+      Integer.lowestOneBit(baseKinds) == baseKinds && baseKinds != 0 // exactly 1 bit on
 
-//     @inline def |(that: OwnerKind): OwnerKind =
-//       new OwnerKind(this.baseKinds | that.baseKinds)
+    @inline def |(that: OwnerKind): OwnerKind =
+      new OwnerKind(this.baseKinds | that.baseKinds)
 
-//     @inline def is(that: OwnerKind): Boolean =
-//       (this.baseKinds & that.baseKinds) != 0
+    @inline def is(that: OwnerKind): Boolean =
+      (this.baseKinds & that.baseKinds) != 0
 
-//     @inline def isnt(that: OwnerKind): Boolean =
-//       !this.is(that)
-//   }
+    @inline def isnt(that: OwnerKind): Boolean =
+      !this.is(that)
+  }
 
-//   private object OwnerKind {
+  private object OwnerKind {
 
-//     /** No owner, i.e., we are at the top-level. */
-//     val None = new OwnerKind(0x00)
+    /** No owner, i.e., we are at the top-level. */
+    val None = new OwnerKind(0x00)
 
-//     // Base kinds - those form a partition of all possible enclosing owners
+    // Base kinds - those form a partition of all possible enclosing owners
 
-//     /** A Scala class/trait that does not extend Enumeration. */
-//     val NonEnumScalaClass = new OwnerKind(0x01)
+    /** A Scala class/trait that does not extend Enumeration. */
+    val NonEnumScalaClass = new OwnerKind(0x01)
 
-//     /** A Scala object that does not extend Enumeration. */
-//     val NonEnumScalaMod = new OwnerKind(0x02)
+    /** A Scala object that does not extend Enumeration. */
+    val NonEnumScalaMod = new OwnerKind(0x02)
 
-//     /** A Scala class/trait that extends Enumeration. */
-//     val EnumClass = new OwnerKind(0x40)
+    /** A Scala class/trait that extends Enumeration. */
+    val EnumClass = new OwnerKind(0x40)
 
-//     /** A Scala object that extends Enumeration. */
-//     val EnumMod = new OwnerKind(0x80)
+    /** A Scala object that extends Enumeration. */
+    val EnumMod = new OwnerKind(0x80)
 
-//     /** The Enumeration class itself. */
-//     val EnumImpl = new OwnerKind(0x100)
+    /** The Enumeration class itself. */
+    val EnumImpl = new OwnerKind(0x100)
 
-//     // Compound kinds
+    // Compound kinds
 
-//     /** A Scala class/trait, possibly Enumeration-related. */
-//     val ScalaClass = NonEnumScalaClass | EnumClass | EnumImpl
+    /** A Scala class/trait, possibly Enumeration-related. */
+    val ScalaClass = NonEnumScalaClass | EnumClass | EnumImpl
 
-//     /** A Scala object, possibly Enumeration-related. */
-//     val ScalaMod = NonEnumScalaMod | EnumMod
+    /** A Scala object, possibly Enumeration-related. */
+    val ScalaMod = NonEnumScalaMod | EnumMod
 
-//     /** A Scala class, trait or object */
-//     val ScalaThing = ScalaClass | ScalaMod
+    /** A Scala class, trait or object */
+    val ScalaThing = ScalaClass | ScalaMod
 
-//     /** A Scala class/trait/object extending Enumeration, but not Enumeration itself. */
-//     val Enum = EnumClass | EnumMod
+    /** A Scala class/trait/object extending Enumeration, but not Enumeration itself. */
+    val Enum = EnumClass | EnumMod
 
-//   }
-// }
+  }
+}
