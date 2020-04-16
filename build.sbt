@@ -344,9 +344,9 @@ lazy val nscplugin =
       )
     )
 
-lazy val nscpluginDotty =
+lazy val dottyNscplugin =
   project
-    .in(file("nscplugin-dotty"))
+    .in(dotty / "nscplugin")
     .settings(baseSettings)
     .settings(mavenPublishSettings)
     .settings(
