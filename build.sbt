@@ -223,6 +223,23 @@ lazy val toolSettings =
       javacOptions ++= Seq("-encoding", "utf8")
     )
 
+lazy val dottyToolSettings =
+  baseSettings ++
+    Seq(
+      sbtVersion := sbt10Version,
+      crossSbtVersions := List(sbt10Version),
+      scalaVersion := dottyVersion,
+      crossScalaVersions := List(dottyVersion),
+      scalacOptions ++= Seq(
+        "-deprecation",
+        "-unchecked",
+        "-feature",
+        "-encoding",
+        "utf8"
+      ),
+      javacOptions ++= Seq("-encoding", "utf8")
+    )
+
 lazy val libSettings =
   (baseSettings ++ ScalaNativePlugin.projectSettings.tail) ++ Seq(
     scalaVersion := libScalaVersion,
@@ -245,12 +262,30 @@ lazy val util =
     .settings(toolSettings)
     .settings(mavenPublishSettings)
 
+val dotty = file(".") / "dotty"
+
+lazy val dottyUtil =
+  project
+    .in(dotty / "util")
+    .settings(dottyToolSettings)
+    .settings(mavenPublishSettings)
+
 lazy val nir =
   project
     .in(file("nir"))
     .settings(toolSettings)
     .settings(mavenPublishSettings)
     .dependsOn(util)
+
+lazy val dottyNir =
+  project
+    .in(dotty / "nir")
+    .settings(dottyToolSettings)
+    .settings(mavenPublishSettings)
+    .settings(
+      libraryDependencies += "org.scala-lang.modules" % "scala-parallel-collections_2.13" % "0.2.0"
+     )
+    .dependsOn(dottyUtil)
 
 lazy val nirparser =
   project
@@ -319,8 +354,8 @@ lazy val nscpluginDotty =
       crossScalaVersions := List(dottyVersion),
       crossVersion := CrossVersion.full,
       Compile / unmanagedSourceDirectories ++= Seq(
-        file("dotty") / "nir" / "src" / "main" / "scala",
-        file("dotty") / "util" / "src" / "main" / "scala"
+        (dottyNir / Compile / scalaSource).value,
+        (dottyUtil / Compile / scalaSource).value
       ),
       libraryDependencies ++= Seq(
         "ch.epfl.lamp" %% "dotty-compiler" % scalaVersion.value,
