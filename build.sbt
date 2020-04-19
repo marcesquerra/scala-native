@@ -223,15 +223,17 @@ lazy val toolSettings =
       javacOptions ++= Seq("-encoding", "utf8")
     )
 
+def parallelCollections(scalav: String) =
+  if (scalav == dottyVersion)
+    List("org.scala-lang.modules" % "scala-parallel-collections_2.13" % "0.2.0")
+  else
+    Nil
+
 lazy val dottyToolSettings =
   toolSettings ++
     Seq(
       crossScalaVersions := List(sbt10ScalaVersion, dottyVersion),
-      libraryDependencies ++= (if (scalaVersion.value == dottyVersion)
-                                 List(
-                                   "org.scala-lang.modules" % "scala-parallel-collections_2.13" % "0.2.0")
-                               else
-                                 Nil)
+      libraryDependencies ++= parallelCollections(scalaVersion.value)
     )
 
 lazy val libSettings =
@@ -330,6 +332,37 @@ lazy val nscplugin =
       libraryDependencies ++= Seq(
         "org.scala-lang" % "scala-compiler" % scalaVersion.value,
         "org.scala-lang" % "scala-reflect"  % scalaVersion.value
+      )
+    )
+
+lazy val nscpluginDotty =
+  project
+    .in(file("nscplugin-dotty"))
+    .settings(baseSettings)
+    .settings(mavenPublishSettings)
+    .settings(
+      scalaVersion := dottyVersion,
+      crossScalaVersions := List(dottyVersion),
+      crossVersion := CrossVersion.full,
+      Compile / unmanagedSourceDirectories ++= {
+        val root = baseDirectory.value.getParentFile
+
+        val modules = Seq(
+          "util",
+          "nir"
+        )
+        val extraSources =
+          (CrossVersion.partialVersion(scalaVersion.value) match {
+            case Some((min, patch)) =>
+              modules.map(dir => root / s"$dir/src/main/scala-$min.$patch")
+            case _ =>
+              Nil
+          })
+        modules.map(dir => root / s"$dir/src/main/scala") ++ extraSources
+      },
+      libraryDependencies ++= parallelCollections(scalaVersion.value),
+      libraryDependencies ++= Seq(
+        "ch.epfl.lamp" %% "dotty-compiler" % scalaVersion.value,
       )
     )
 
@@ -555,6 +588,18 @@ lazy val sandbox =
       scalaVersion := libScalaVersion
     )
     .enablePlugins(ScalaNativePlugin)
+
+lazy val sandboxDotty =
+  project
+    .in(file("sandbox"))
+    .settings(noPublishSettings)
+    .settings(
+      // nativeOptimizerReporter := OptimizerReporter.toDirectory(
+      //   crossTarget.value),
+      scalaVersion := dottyVersion,
+      target := target.value / "target-dotty",
+      scalacOptions += s"-Xplugin:${(nscpluginDotty / Compile / Keys.`package`).value.getAbsolutePath}"
+    )
 
 lazy val testingCompilerInterface =
   project
